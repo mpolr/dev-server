@@ -33,7 +33,6 @@ services:
             - 3306:3306
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock:ro
-            - ./etc/traefik/acme.json:/acme.json
         networks:
             - web
             - internal
