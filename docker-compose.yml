@@ -1,0 +1,116 @@
+version: '3.5'
+
+networks:
+    web:
+        external: true
+    internal:
+        external: false
+
+services:
+
+    traefik:
+        image: traefik:${TRAEFIK_VERSION}
+        restart: unless-stopped
+        container_name: traefik
+        env_file:
+            - .env
+        command:
+            - --providers.docker=true
+            - --providers.docker.exposedbydefault=false
+            - --entrypoints.http.address=:80
+            - --entrypoints.https.address=:443
+            - --entrypoints.mysql.address=:3306
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.traefik.rule=Host(`traefik.${NGINX_HOST}`)
+            - traefik.http.routers.traefik.priority=10
+            - traefik.http.routers.traefik.entrypoints=http
+            - traefik.http.routers.traefik.service=api@internal
+            - traefik.http.services.traefik.loadbalancer.server.port=8080
+        ports:
+            - 80:80
+            - 443:443
+            - 3306:3306
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ./etc/traefik/acme.json:/acme.json
+        networks:
+            - web
+            - internal
+
+    nginx:
+        image: nginx:${NGINX_VERSION}
+        container_name: nginx
+        restart: always
+        environment:
+            - NGINX_HOST=${NGINX_HOST}
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.nginx.rule=HostRegexp(`${NGINX_HOST}`, `{subdomain:[a-z]+}.${NGINX_HOST}`)
+            - traefik.http.routers.nginx.priority=1
+            - traefik.http.routers.nginx.entrypoints=http
+        volumes:
+            - ./etc/nginx/default.conf:/etc/nginx/conf.d/default.conf
+            - ./web:/var/www
+            - ./etc/nginx/default.template.conf:/etc/nginx/conf.d/default.template
+        command: /bin/sh -c "envsubst '$$NGINX_HOST' < /etc/nginx/conf.d/default.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+        healthcheck:
+            test:  wget --spider http://nginx/health || exit 1
+            interval: 10s
+            timeout: 10s
+            retries: 3
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "2048k"
+                max-file: "10"
+        depends_on:
+            - php
+            - mariadb
+            - traefik
+        networks:
+            - internal
+
+    php:
+        container_name: php
+        build:
+            context: ./etc/docker/php
+        restart: always
+        volumes:
+            - ./etc/php/php.ini:/usr/local/etc/php/conf.d/php.ini
+            - ./web:/var/www
+        networks:
+            - internal
+        depends_on:
+            - traefik
+
+    mariadb:
+        image: mariadb:${MYSQL_VERSION}
+        container_name: mariadb
+        restart: always
+        environment:
+            - MYSQL_DATABASE=${MYSQL_DATABASE}
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+        volumes:
+            - ./data/db/mysql:/var/lib/mysql
+            - ./etc/mysql/my.cnf:/etc/mysql/my.cnf
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "2048k"
+                max-file: "10"
+        healthcheck:
+            test: mysqladmin ping -u${MYSQL_ROOT_USER} -p${MYSQL_ROOT_PASSWORD} -h mariadb
+            interval: 30s
+            timeout: 10s
+            retries: 3
+        networks:
+            - internal
+        depends_on:
+            - traefik
+        labels:
+            - traefik.enable=true
+            - traefik.tcp.routers.mariadb.entrypoints=mysql
+            - traefik.tcp.routers.mariadb.rule=HostSNI(`*`)

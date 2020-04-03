@@ -1,0 +1,14 @@
+
+.idea/
+
+web/app/
+
+etc/nginx/default.conf
+
+web/sup24.ru/public/
+
+.env
+
+data/db/
+
+data/portainer/
