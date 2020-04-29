@@ -10,7 +10,6 @@ RUN apk add --update \
 		freetype-dev \
         libjpeg-turbo-dev \
         libpng-dev \
-
 	&& docker-php-ext-install mbstring \
 	&& docker-php-ext-install mysqli \
 	&& docker-php-ext-install pdo_mysql \
