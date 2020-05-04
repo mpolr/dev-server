@@ -11,14 +11,12 @@ RUN apk add --update \
 		freetype-dev \
         libjpeg-turbo-dev \
         libpng-dev \
-	&& docker-php-ext-install mbstring \
-	&& docker-php-ext-install mysqli \
-	&& docker-php-ext-install pdo_mysql \
-	&& docker-php-ext-install opcache \
-	&& docker-php-ext-configure gd \
-            --with-freetype-dir=/usr \
-            --with-png-dir=/usr \
-            --with-jpeg-dir=/usr \
-	&& docker-php-ext-install gd \
-	&& docker-php-ext-install zip \
-    && rm -rf /tmp/* /var/cache/apk/*
+        libzip-dev \
+        curl
+
+# Install extensions
+RUN docker-php-ext-install pdo_mysql mbstring mysqli opcache zip exif pcntl
+RUN docker-php-ext-configure gd --with-gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-png-dir=/usr/include/
+RUN docker-php-ext-install gd
+
+RUN rm -rf /tmp/* /var/cache/apk/*
