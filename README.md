@@ -1,5 +1,7 @@
 # **Сервер локальной разработки**
 
+[![Build Status](https://travis-ci.com/mPolr/dev-server.svg?branch=master)](https://travis-ci.com/mPolr/dev-server)
+
 Статья о [сервере для разработки](https://mpolr.ru/blog/post/31) на моем сайте где вы сможете задать вопросы и предложить новый функционал.
 
 **Настройка и установка:**
