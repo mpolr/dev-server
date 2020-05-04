@@ -74,6 +74,8 @@ services:
         container_name: php
         build:
             context: ./etc/docker/php
+            args:
+                PHP_VERSION: ${PHP_VERSION}
         restart: always
         volumes:
             - ./etc/php/php.ini:/usr/local/etc/php/conf.d/php.ini

@@ -1,4 +1,5 @@
-FROM php:7.1-fpm-alpine
+ARG PHP_VERSION
+FROM php:$PHP_VERSION
 
 # Supported PHP extensions: https://github.com/mlocati/docker-php-extension-installer
 
