@@ -1,4 +1,5 @@
 # **Сервер локальной разработки**
+## **Docker, Traefik, Nginx, MySQL, PHP**
 
 [![Build Status](https://travis-ci.com/mPolr/dev-server.svg?branch=master)](https://travis-ci.com/mPolr/dev-server)
 
@@ -27,3 +28,5 @@
 * Размещаем файлы сайта в папке `./web/html/public`
 
 * Сайт доступен по адресу из переменной `NGINX_HOST` в файле `.env`
+
+* Composer доступен для использования в контейнере PHP и может быть вызван командой `docker-compose exec php composer install -d /var/www/html`

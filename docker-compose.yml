@@ -1,4 +1,4 @@
-version: '3.5'
+version: '3.6'
 
 networks:
     web:
@@ -76,6 +76,8 @@ services:
             context: ./etc/docker/php
             args:
                 PHP_VERSION: ${PHP_VERSION}
+                USER: php
+                UID: 1000
         restart: always
         volumes:
             - ./etc/php/php.ini:/usr/local/etc/php/conf.d/php.ini
