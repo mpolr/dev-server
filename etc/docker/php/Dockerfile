@@ -32,7 +32,7 @@ RUN apk update \
     libintl gettext-dev libxslt \
     # etc
     bash nano zip unzip \
-    && apk add  --no-cache git mysql-client curl libmcrypt libmcrypt-dev g++ make autoconf \
+    && apk add --no-cache git mysql-client curl libmcrypt libmcrypt-dev g++ make autoconf libzip-dev \
     && docker-php-source extract \
 	&& docker-php-ext-configure gd \
         --with-gd \
