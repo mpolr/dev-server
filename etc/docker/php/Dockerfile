@@ -30,6 +30,8 @@ RUN apk update \
     bzip2-dev \
     # for intl extension
     libintl gettext-dev libxslt \
+    # nodejs & npm
+    nodejs nodejs-npm \
     # etc
     bash nano zip unzip \
     && apk add --no-cache git mysql-client curl libmcrypt libmcrypt-dev g++ make autoconf libzip-dev \
