@@ -5,3 +5,4 @@ etc/nginx/default.conf
 data/db/
 data/portainer/
 /web/html/
+web/
