@@ -1,3 +1,4 @@
+[![CodeFactor](https://www.codefactor.io/repository/github/mpolr/dev-server/badge/master)](https://www.codefactor.io/repository/github/mpolr/dev-server/overview/master)
 # **Local development server**
 ## **Docker, Traefik, Nginx, MySQL, PHP**
 
