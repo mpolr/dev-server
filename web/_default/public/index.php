@@ -66,6 +66,10 @@
         .m-b-md {
             margin-bottom: 30px;
         }
+
+        .text-left {
+	        text-align: left;
+        }
     </style>
 </head>
 <body>
@@ -85,7 +89,25 @@
                 </p>
                 <p>
                     You can create you projects folders in "<?php echo dirname(__DIR__, 2) ?>",<br>
-                    e.g. "<?php echo dirname(__DIR__, 2) ?>/my-project/public" will be accessible via URL: <?php echo "http://my-project.$_SERVER[HTTP_HOST]" ?>
+                    e.g. "<?php echo dirname(__DIR__, 2) ?>/my-project/public" will be accessible via URL: <?php echo "//my-project.$_SERVER[HTTP_HOST]" ?>
+                </p>
+            </div>
+
+            <div>
+                <p class="">
+                    Here is a list of current project folders:
+                </p>
+                <p>
+                    <?php
+                        $dir = new DirectoryIterator(dirname(__DIR__, 2));
+                        foreach ($dir as $fileinfo) {
+                            echo '<ul class="text-left">';
+                            if ($fileinfo->isDir() && !$fileinfo->isDot() && $fileinfo->getFilename() != '_default') {
+                                echo '<li><a target="_blank" href="//'.$fileinfo->getFilename().'.'.$_SERVER["HTTP_HOST"].'">'.$fileinfo->getFilename().'</a></li>';
+                            }
+                            echo '</ul>';
+                        }
+                    ?>
                 </p>
             </div>
 
