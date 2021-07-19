@@ -66,4 +66,4 @@ Article about [local development server](https://mpolr.ru/blog/post/31) on my si
 
 * Вы можете создавать папки с вашими проектами в папке "./web/", например содержимое папки "./web/my-project/public" будет доступно по URL: `http://my-project.NGINX_HOST` из переменной в файле `.env`
 
-* Composer доступен для использования в контейнере PHP и может быть вызван командой `docker-compose exec php composer install -d /var/www/html`
+* Composer доступен для использования в контейнере PHP и может быть вызван командой `docker-compose exec php composer install -d /var/www/_default`
