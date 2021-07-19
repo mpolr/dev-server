@@ -31,7 +31,7 @@ RUN apk update \
     # for intl extension
     libintl gettext-dev libxslt \
     # nodejs & npm
-    nodejs nodejs-npm \
+    nodejs npm \
     # etc
     bash nano zip unzip \
     && apk add --no-cache git mysql-client curl libmcrypt libmcrypt-dev g++ make autoconf libzip-dev \
