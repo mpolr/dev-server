@@ -11,7 +11,7 @@ services:
     traefik:
         image: traefik:${TRAEFIK_VERSION}
         restart: unless-stopped
-        container_name: traefik
+        container_name: traefik-dev
         env_file:
             - .env
         command:
