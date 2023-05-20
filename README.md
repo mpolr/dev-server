@@ -16,6 +16,7 @@ Article about [local development server](https://mpolr.ru/blog/post/31) on my si
 * Edit file `.env` as you need
     - If necessary change variable `NGINX_HOST`
     - Set variables `MYSQL_DATABASE`, `MYSQL_ROOT_PASSWORD`, `MYSQL_USER`, `MYSQL_PASSWORD`
+    - Set PHP version `PHP_VERSION` to following: `5.2`, `5.3`, `5.4`, `5.5`, `5.6`, `7.0`, `7.1`, `7.2`, `7.3`, `7.4`, `8.0`, `8.1`, `8.2` (tested only with `8.1`)
 
 * If necessary edit files:
     - nginx config: `./etc/nginx/default.template.conf`
@@ -51,6 +52,7 @@ Article about [local development server](https://mpolr.ru/blog/post/31) on my si
 * Редактируем файл `.env` под свои нужды
     - При необходимости меняем переменную `NGINX_HOST`
     - Устанавливаем значения переменных `MYSQL_DATABASE`, `MYSQL_ROOT_PASSWORD`, `MYSQL_USER`, `MYSQL_PASSWORD`
+    - Указываем версию PHP `PHP_VERSION` из: `5.2`, `5.3`, `5.4`, `5.5`, `5.6`, `7.0`, `7.1`, `7.2`, `7.3`, `7.4`, `8.0`, `8.1`, `8.2` (тестировалось только с `8.1`)
 
 * При необходимости редактируем файлы:
     - Конфигурация nginx: `./etc/nginx/default.template.conf`

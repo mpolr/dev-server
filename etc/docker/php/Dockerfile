@@ -1,108 +1,783 @@
+# Auto-generated via Ansible: edit build/ansible/DOCKERFILES/Dockerfile-mods.j2 instead.
 ARG PHP_VERSION
-ARG USER
-ARG UID
+FROM devilbox/php-fpm:${PHP_VERSION}-prod as builder
 
-FROM php:$PHP_VERSION
+###
+### Install
+###
+RUN set -eux \
+	&& DEBIAN_FRONTEND=noninteractive apt-get update \
+	&& DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests \
+		alien \
+		firebird-dev \
+		freetds-dev \
+		ghostscript \
+		libaio-dev \
+		libavif-dev \
+		libbz2-dev \
+		libc-ares-dev \
+		libc-client-dev \
+		libcurl4-openssl-dev \
+		libenchant-2-dev \
+		libevent-dev \
+		libfbclient2 \
+		libfreetype6-dev \
+		libgmp-dev \
+		libib-util \
+		libicu-dev \
+		libjpeg-dev \
+		libkrb5-dev \
+		libldap2-dev \
+		libmagickwand-dev \
+		libmariadb-dev \
+		libmemcached-dev \
+		libnghttp2-dev \
+		libpcre3-dev \
+		libpng-dev \
+		libpq-dev \
+		libpspell-dev \
+		librabbitmq-dev \
+		librdkafka-dev \
+		libsasl2-dev \
+		libsnmp-dev \
+		libsodium-dev \
+		libssl-dev \
+		libtidy-dev \
+		libvips-dev \
+		libvips42 \
+		libvpx-dev \
+		libwebp-dev \
+		libxml2-dev \
+		libxpm-dev \
+		libxslt-dev \
+		libyaml-dev \
+		libzip-dev \
+		snmp \
+		unixodbc-dev \
+		uuid-dev \
+		zlib1g-dev \
+        # Build tools
+		autoconf \
+		bison \
+		bisonc++ \
+		ca-certificates \
+		curl \
+		dpkg-dev \
+		file \
+		flex \
+		g++ \
+		gcc \
+		git \
+		lemon \
+		libc-client-dev \
+		libc-dev \
+		libcurl4-openssl-dev \
+		libssl-dev \
+		make \
+		patch \
+		pkg-config \
+		re2c \
+		xz-utils \
+	&& rm -rf /var/lib/apt/lists/*
 
-ENV PS1='\[\033[1;32m\]🐳  \[\033[1;36m\][\u@\h] \[\033[1;34m\]\w\[\033[0;35m\] \[\033[1;36m\]# \[\033[0m\]'
 
-RUN apk update \
-	&& apk add --no-cache --virtual .persistent-deps \
-	autoconf cmake file g++ gcc git libc-dev pcre-dev make pkgconf re2c \
-    # for bcmatch
-    php-bcmath \
-    # for GD
-    freetype-dev \
-    libpng-dev  \
-    libjpeg-turbo-dev \
-    libxslt-dev \
-    # for intl extension
-    icu-dev \
-    # for postgres
-    postgresql-dev \
-    # for soap
-    libxml2-dev \
-    # for GD
-    freetype-dev \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    # for bz2 extension
-    bzip2-dev \
-    # for intl extension
-    libintl gettext-dev libxslt \
-    # nodejs & npm
-    nodejs npm \
-    # etc
-    bash nano zip unzip \
-    && apk add --no-cache git mysql-client curl libmcrypt libmcrypt-dev g++ make autoconf libzip-dev \
-    && docker-php-source extract \
-	&& docker-php-ext-configure gd \
-        --with-gd \
-        --with-freetype-dir=/usr/include/ \
-        --with-png-dir=/usr/include/ \
-        --with-jpeg-dir=/usr/include/ \
-    && docker-php-ext-configure bcmath --enable-bcmath \
-    && docker-php-ext-configure intl --enable-intl \
-    && docker-php-ext-configure pcntl --enable-pcntl \
-    && docker-php-ext-configure mysqli --with-mysqli \
-    && docker-php-ext-configure pdo_mysql --with-pdo-mysql \
-    #&& docker-php-ext-configure pdo_pgsql --with-pgsql \
-    && docker-php-ext-configure mbstring --enable-mbstring \
-    && docker-php-ext-configure soap --enable-soap \
-    && docker-php-ext-configure opcache --enable-opcache \
-    && pecl install xdebug redis \
-    && docker-php-ext-enable xdebug redis \
-    && docker-php-source delete \
-    && docker-php-ext-install -j$(nproc) \
-		gd \
-        bcmath \
-        intl \
-        pcntl \
-        mysqli \
-        pdo_mysql \
-        pdo_pgsql \
-        mbstring \
-        soap \
-        iconv \
-        bz2 \
-        calendar \
-        exif \
-        gettext \
-        shmop \
-        sockets \
-        sysvmsg \
-        sysvsem \
-        sysvshm \
-        wddx \
-        xsl \
-		zip \
-        opcache \
-		&& echo -e "opcache.memory_consumption=128\n\
-opcache.interned_strings_buffer=8\n\
-opcache.max_accelerated_files=4000\n\
-opcache.revalidate_freq=60\n\
-opcache.fast_shutdown=1\n\
-opcache.enable_cli=1\n\
-opcache.enable=1\n" > /usr/local/etc/php/conf.d/opcache.ini \
-    && echo "xdebug.remote_enable=on" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo "xdebug.remote_autostart=off" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo "xdebug.remote_port=9001" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo "xdebug.remote_handler=dbgp" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo "xdebug.remote_connect_back=0" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo "xdebug.idekey=mertblog.net" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo "xdebug.remote_host=docker.for.mac.localhost" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
-    && rm -rf /tmp/*
+# Fix timezone (only required for testing to stop php -v and php-fpm -v from complaining to stderr)
+RUN set -eux \
+	&& echo "date.timezone=UTC" > /usr/local/etc/php/php.ini
 
-# Get latest Composer
-# COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Create system user to run Composer and Artisan Commands
-#RUN useradd -G www-data,root -u $UID -d /var/www $USER
-#RUN mkdir -p /var/www/.composer && chown -R $USER:$USER /var/www
+###
+### Install and enable PHP modules
+###
+# Enable ffi if it exists
+RUN set -eux \
+	&& if [ -f /usr/local/etc/php/conf.d/docker-php-ext-ffi.ini ]; then \
+			echo "ffi.enable = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-ffi.ini; \
+		fi
 
-CMD ["php-fpm", "-F"]
 
-WORKDIR /var/www
+# -------------------- Installing PHP Extension: bcmath --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) bcmath \
+	&& true
 
-USER $user
+
+# -------------------- Installing PHP Extension: bz2 --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) bz2 \
+	&& true
+
+
+# -------------------- Installing PHP Extension: calendar --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) calendar \
+	&& true
+
+
+# -------------------- Installing PHP Extension: dba --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) dba \
+	&& true
+
+
+# -------------------- Installing PHP Extension: enchant --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) enchant \
+	&& true
+
+
+# -------------------- Installing PHP Extension: exif --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) exif \
+	&& true
+
+
+# -------------------- Installing PHP Extension: gd --------------------
+RUN set -eux \
+	# Generic pre-command
+	&& ln -s /usr/lib/$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)/libXpm.* /usr/lib/ \
+	# Installation: Version specific
+	# Type:         Built-in extension
+	# Custom:       configure command
+	&& docker-php-ext-configure gd --enable-gd --with-webp --with-jpeg --with-xpm --with-freetype --with-avif \
+	# Installation
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) gd \
+	&& true
+
+
+# -------------------- Installing PHP Extension: gettext --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) gettext \
+	&& true
+
+
+# -------------------- Installing PHP Extension: gmp --------------------
+RUN set -eux \
+	# Generic pre-command
+	&& ln /usr/include/$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)/gmp.h /usr/include/ \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) gmp \
+	&& true
+
+
+# -------------------- Installing PHP Extension: igbinary --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         PECL extension
+	# Default:      Pecl command
+	&& pecl install igbinary \
+	# Enabling
+	&& docker-php-ext-enable igbinary \
+	&& true
+
+
+# -------------------- Installing PHP Extension: imap --------------------
+RUN set -eux \
+	# Generic pre-command
+	&& ln -s /usr/lib/$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)/libkrb5* /usr/lib/ \
+	# Installation: Generic
+	# Type:         Built-in extension
+	# Custom:       configure command
+	&& docker-php-ext-configure imap --with-kerberos --with-imap-ssl --with-imap \
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) imap \
+	&& true
+
+
+# -------------------- Installing PHP Extension: intl --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) intl \
+	&& true
+
+
+# -------------------- Installing PHP Extension: mysqli --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) mysqli \
+	&& true
+
+
+# -------------------- Installing PHP Extension: opcache --------------------
+RUN set -eux \
+	# Version specific pre-command
+	&& curl -sS https://raw.githubusercontent.com/php/php-src/php-8.0.6/ext/opcache/Optimizer/zend_dfg.h > /usr/local/include/php/Zend/Optimizer/zend_dfg.h \
+	# Installation: Version specific
+	# Type:         Built-in extension
+	# Installation
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) opcache \
+	&& true
+
+
+# -------------------- Installing PHP Extension: pcntl --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) pcntl \
+	&& true
+
+
+# -------------------- Installing PHP Extension: pdo_dblib --------------------
+RUN set -eux \
+	# Generic pre-command
+	&& ln -s /usr/lib/$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)/libsybdb.* /usr/lib/ \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) pdo_dblib \
+	&& true
+
+
+# -------------------- Installing PHP Extension: pdo_mysql --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	# Custom:       configure command
+	&& docker-php-ext-configure pdo_mysql --with-zlib-dir=/usr \
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) pdo_mysql \
+	&& true
+
+
+# -------------------- Installing PHP Extension: pdo_pgsql --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) pdo_pgsql \
+	&& true
+
+
+# -------------------- Installing PHP Extension: pgsql --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) pgsql \
+	&& true
+
+
+# -------------------- Installing PHP Extension: pspell --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) pspell \
+	&& true
+
+
+# -------------------- Installing PHP Extension: redis --------------------
+RUN set -eux \
+	# Installation: Version specific
+	# Type:         GIT extension
+	&& git clone https://github.com/phpredis/phpredis /tmp/redis \
+	&& cd /tmp/redis \
+	# Custom:       Branch
+	&& git checkout $(git for-each-ref --format='%(refname)' refs/tags | grep -E 'tags/[.0-9]+$' | sed 's|.*tags/||g' | sort -V | tail -1) \
+	# Custom:       Install command
+	&& REDIS_ARGS=""; \
+if [ -d "/usr/local/include/php/ext/igbinary" ]; then \
+  REDIS_ARGS="${REDIS_ARGS} --enable-redis-igbinary"; \
+fi; \
+if [ -d "/usr/local/include/php/ext/msgpack" ]; then \
+  REDIS_ARGS="${REDIS_ARGS} --enable-redis-msgpack"; \
+fi; \
+phpize \
+&& ./configure --enable-redis ${REDIS_ARGS} \
+&& sed -i'' 's/ops->hash_init(ctx);/ops->hash_init(ctx, NULL);/g' library.c \
+&& sed -i'' 's/ops->hash_init(ctx);/ops->hash_init(ctx, NULL);/g' redis_array_impl.c \
+&& make -j$(getconf _NPROCESSORS_ONLN) \
+&& make install \
+ \
+	# Enabling
+	&& docker-php-ext-enable redis \
+	&& true
+
+
+# -------------------- Installing PHP Extension: shmop --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) shmop \
+	&& true
+
+
+# -------------------- Installing PHP Extension: snmp --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	# Custom:       configure command
+	&& docker-php-ext-configure snmp --with-openssl-dir \
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) snmp \
+	&& true
+
+
+# -------------------- Installing PHP Extension: soap --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	# Custom:       configure command
+	&& docker-php-ext-configure soap --with-libxml-dir=/usr \
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) soap \
+	&& true
+
+
+# -------------------- Installing PHP Extension: sockets --------------------
+RUN set -eux \
+	# Version specific pre-command
+	&& docker-php-ext-configure sockets \
+&& sed -i'' 's/.*ucred.*//g' /usr/src/php/ext/sockets/sendrecvmsg.c \
+ \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) sockets \
+	&& true
+
+
+# -------------------- Installing PHP Extension: sodium --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) sodium \
+	&& true
+
+
+# -------------------- Installing PHP Extension: sysvmsg --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) sysvmsg \
+	&& true
+
+
+# -------------------- Installing PHP Extension: sysvsem --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) sysvsem \
+	&& true
+
+
+# -------------------- Installing PHP Extension: sysvshm --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) sysvshm \
+	&& true
+
+
+# -------------------- Installing PHP Extension: tidy --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) tidy \
+	&& true
+
+
+# -------------------- Installing PHP Extension: xdebug --------------------
+RUN set -eux \
+	# Installation: Version specific
+	# Type:         GIT extension
+	&& git clone https://github.com/xdebug/xdebug /tmp/xdebug \
+	&& cd /tmp/xdebug \
+	# Custom:       Branch
+	&& git checkout $(git for-each-ref --format='%(refname)' refs/tags | grep -E 'tags/[.0-9]+$' | sed 's|.*tags/||g' | sort -V | tail -1) \
+	# Default:      Install command
+	&& phpize \
+	&& ./configure  --enable-xdebug \
+	&& make -j$(getconf _NPROCESSORS_ONLN) \
+	&& make install \
+	# Enabling
+	&& docker-php-ext-enable xdebug \
+	&& true
+
+
+# -------------------- Installing PHP Extension: xsl --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) xsl \
+	&& true
+
+
+# -------------------- Installing PHP Extension: xlswriter --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         PECL extension
+	# Default:      Pecl command
+	&& pecl install xlswriter \
+	# Enabling
+	&& docker-php-ext-enable xlswriter \
+	&& true
+
+
+# -------------------- Installing PHP Extension: yaml --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         PECL extension
+	# Default:      Pecl command
+	&& pecl install yaml \
+	# Enabling
+	&& docker-php-ext-enable yaml \
+	&& true
+
+
+# -------------------- Installing PHP Extension: zip --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         Built-in extension
+	# Custom:       configure command
+	&& docker-php-ext-configure zip --with-zlib-dir=/usr --with-pcre-dir=/usr --with-libzip \
+	&& docker-php-ext-install -j$(getconf _NPROCESSORS_ONLN) zip \
+	&& true
+
+
+# -------------------- Installing PHP Extension: swoole --------------------
+RUN set -eux \
+	# Installation: Generic
+	# Type:         PECL extension
+	# Custom:       Pecl command
+	&& pecl install -D 'enable-sockets="no" enable-openssl="yes" enable-http2="yes" enable-mysqlnd="yes" enable-swoole-json="no" enable-swoole-curl="yes" enable-cares="yes" with-postgres="yes"' swoole \
+	# Enabling
+	&& docker-php-ext-enable swoole \
+	&& true
+
+
+
+
+# Fix php.ini settings for enabled extensions
+RUN set -eux \
+	&& chmod +x "$(php -r 'echo ini_get("extension_dir");')"/*
+
+# Fix oracle dir for images that don't have oci installed
+RUN set -eux \
+	&& mkdir -p /usr/lib/oracle/
+
+# Shrink everything down
+RUN set -eux \
+	&& (find /usr/local/bin  -type f -print0 | xargs -n1 -0 -P$(getconf _NPROCESSORS_ONLN) strip --strip-all -p 2>/dev/null || true) \
+	&& (find /usr/local/lib  -type f -print0 | xargs -n1 -0 -P$(getconf _NPROCESSORS_ONLN) strip --strip-all -p 2>/dev/null || true) \
+	&& (find /usr/local/sbin -type f -print0 | xargs -n1 -0 -P$(getconf _NPROCESSORS_ONLN) strip --strip-all -p 2>/dev/null || true)
+
+
+
+# Auto-generated via Ansible: edit build/ansible/DOCKERFILES/Dockerfile-mods.j2 instead.
+FROM devilbox/php-fpm:8.1-base as final
+MAINTAINER "cytopia" <cytopia@everythingcli.org>
+
+###
+### Labels
+###
+# https://github.com/opencontainers/image-spec/blob/master/annotations.md
+#LABEL "org.opencontainers.image.created"=""
+#LABEL "org.opencontainers.image.version"=""
+#LABEL "org.opencontainers.image.revision"=""
+LABEL "maintainer"="cytopia <cytopia@everythingcli.org>"
+LABEL "org.opencontainers.image.authors"="cytopia <cytopia@everythingcli.org>"
+LABEL "org.opencontainers.image.url"="https://github.com/devilbox/docker-php-fpm"
+LABEL "org.opencontainers.image.documentation"="https://github.com/devilbox/docker-php-fpm"
+LABEL "org.opencontainers.image.source"="https://github.com/devilbox/docker-php-fpm"
+LABEL "org.opencontainers.image.vendor"="devilbox"
+LABEL "org.opencontainers.image.licenses"="MIT"
+LABEL "org.opencontainers.image.ref.name"="8.1-mods"
+LABEL "org.opencontainers.image.title"="PHP-FPM 8.1-mods"
+LABEL "org.opencontainers.image.description"="PHP-FPM 8.1-mods"
+
+
+###
+### Install runtime libraries
+###
+RUN set -eux \
+	&& DEBIAN_FRONTEND=noninteractive apt-get update \
+	&& DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests \
+	ghostscript \
+	libaio1 \
+	libaspell15 \
+	libavif9 \
+	libc-ares2 \
+	libc-client2007e \
+	libenchant-2-2 \
+	libevent-2.1-7 \
+	libfbclient2 \
+	libffi7 \
+	libfreetype6 \
+	libicu67 \
+	libjpeg62-turbo \
+	libmagickwand-6.q16-6 \
+	libmariadbd19 \
+	libmemcachedutil2 \
+	libnghttp2-14 \
+	libpng16-16 \
+	libpq5 \
+	librabbitmq4 \
+	librdkafka1 \
+	libsybdb5 \
+	libtidy5deb1 \
+	libvips42 \
+	libvpx6 \
+	libwebp6 \
+	libxpm4 \
+	libxslt1.1 \
+	libyaml-0-2 \
+	libzip4 \
+	snmp \
+	unixodbc \
+	uuid \
+	ca-certificates \
+	&& rm -rf /var/lib/apt/lists/* \
+	\
+	&& update-ca-certificates
+
+
+###
+### Copy artifacts from builder
+###
+ARG EXT_DIR
+COPY --from=builder ${EXT_DIR}/ ${EXT_DIR}/
+COPY --from=builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=builder /usr/local/bin/ /usr/local/bin/
+COPY --from=builder /usr/local/lib/ /usr/local/lib/
+COPY --from=builder /usr/lib/oracle/ /usr/lib/oracle/
+
+
+###
+### Post Install executions
+###
+RUN set -eux \
+	# ---------- imagick ----------
+	&& sed -i'' 's|.*"thread".*|  <policy domain="resource" name="thread" value="1"/>|g' /etc/ImageMagick-6/policy.xml \
+&& sed -i'' 's|.*<policy domain="coder".*"PS".*||g' /etc/ImageMagick-6/policy.xml \
+&& sed -i'' 's|.*<policy domain="coder".*"PS2".*||g' /etc/ImageMagick-6/policy.xml \
+&& sed -i'' 's|.*<policy domain="coder".*"PS3".*||g' /etc/ImageMagick-6/policy.xml \
+&& sed -i'' 's|.*<policy domain="coder".*"EPS".*||g' /etc/ImageMagick-6/policy.xml \
+&& sed -i'' 's|.*<policy domain="coder".*"PDF".*||g' /etc/ImageMagick-6/policy.xml \
+&& sed -i'' 's|.*<policy domain="coder".*"XPS".*||g' /etc/ImageMagick-6/policy.xml \
+&& sed -i'' 's|.*<policy domain="coder".*"PS".*||g' /etc/ImageMagick-6/policy.xml \
+&& sed -i'' 's|.*<policy domain="delegate".*pattern="gs".*||g' /etc/ImageMagick-6/policy.xml \
+  \
+	# ---------- oci8 ----------
+	&& ORACLE_HREF="$( curl -sS https://yum.oracle.com/repo/OracleLinux/OL7/oracle/instantclient/$(dpkg-architecture --query DEB_HOST_GNU_CPU)/ | tac | tac | grep -Eo 'href="getPackage/oracle-instantclient.+basiclite.+rpm"' | tail -1 )" \
+&& ORACLE_VERSION_MAJOR="$( echo "${ORACLE_HREF}" | grep -Eo 'instantclient[.0-9]+' | sed 's/instantclient//g' )" \
+&& ORACLE_VERSION_FULL="$( echo "${ORACLE_HREF}" | grep -Eo 'basiclite-[-.0-9]+' | sed -e 's/basiclite-//g' -e 's/\.$//g' )" \
+&& (ln -sf /usr/lib/oracle/${ORACLE_VERSION_MAJOR}/client64/lib/*.so* /usr/lib/ || true) \
+  \
+	&& true
+
+
+###
+### Verify
+###
+RUN set -eux \
+	&& echo "date.timezone=UTC" > /usr/local/etc/php/php.ini \
+	&& php -v | grep -oE 'PHP\s[.0-9]+' | grep -oE '[.0-9]+' | grep '^8.1' \
+	&& /usr/local/sbin/php-fpm --test \
+	\
+	&& PHP_ERROR="$( php -v 2>&1 1>/dev/null )" \
+	&& if [ -n "${PHP_ERROR}" ]; then echo "${PHP_ERROR}"; false; fi \
+	&& PHP_ERROR="$( php -i 2>&1 1>/dev/null )" \
+	&& if [ -n "${PHP_ERROR}" ]; then echo "${PHP_ERROR}"; false; fi \
+	\
+	&& PHP_FPM_ERROR="$( php-fpm -v 2>&1 1>/dev/null )" \
+	&& if [ -n "${PHP_FPM_ERROR}" ]; then echo "${PHP_FPM_ERROR}"; false; fi \
+	&& PHP_FPM_ERROR="$( php-fpm -i 2>&1 1>/dev/null )" \
+	&& if [ -n "${PHP_FPM_ERROR}" ]; then echo "${PHP_FPM_ERROR}"; false; fi \
+	&& rm -f /usr/local/etc/php/php.ini \
+	&& php -m | grep -oiE '^amqp$' \
+	&& php-fpm -m | grep -oiE '^amqp$' \
+	&& php -m | grep -oiE '^apcu$' \
+	&& php-fpm -m | grep -oiE '^apcu$' \
+	&& php -m | grep -oiE '^bcmath$' \
+	&& php-fpm -m | grep -oiE '^bcmath$' \
+	&& php -m | grep -oiE '^bz2$' \
+	&& php-fpm -m | grep -oiE '^bz2$' \
+	&& php -m | grep -oiE '^calendar$' \
+	&& php-fpm -m | grep -oiE '^calendar$' \
+	&& php -m | grep -oiE '^ctype$' \
+	&& php-fpm -m | grep -oiE '^ctype$' \
+	&& php -m | grep -oiE '^curl$' \
+	&& php-fpm -m | grep -oiE '^curl$' \
+	&& php -m | grep -oiE '^dba$' \
+	&& php-fpm -m | grep -oiE '^dba$' \
+	&& php -m | grep -oiE '^dom$' \
+	&& php-fpm -m | grep -oiE '^dom$' \
+	&& php -m | grep -oiE '^enchant$' \
+	&& php-fpm -m | grep -oiE '^enchant$' \
+	&& php -m | grep -oiE '^exif$' \
+	&& php-fpm -m | grep -oiE '^exif$' \
+	&& php -m | grep -oiE '^ffi$' \
+	&& php-fpm -m | grep -oiE '^ffi$' \
+	&& php -m | grep -oiE '^fileinfo$' \
+	&& php-fpm -m | grep -oiE '^fileinfo$' \
+	&& php -m | grep -oiE '^filter$' \
+	&& php-fpm -m | grep -oiE '^filter$' \
+	&& php -m | grep -oiE '^ftp$' \
+	&& php-fpm -m | grep -oiE '^ftp$' \
+	&& php -m | grep -oiE '^gd$' \
+	&& php-fpm -m | grep -oiE '^gd$' \
+	&& php -m | grep -oiE '^gettext$' \
+	&& php-fpm -m | grep -oiE '^gettext$' \
+	&& php -m | grep -oiE '^gmp$' \
+	&& php-fpm -m | grep -oiE '^gmp$' \
+	&& php -m | grep -oiE '^hash$' \
+	&& php-fpm -m | grep -oiE '^hash$' \
+	&& php -m | grep -oiE '^iconv$' \
+	&& php-fpm -m | grep -oiE '^iconv$' \
+	&& php -m | grep -oiE '^igbinary$' \
+	&& php-fpm -m | grep -oiE '^igbinary$' \
+	&& php -m | grep -oiE '^imagick$' \
+	&& php-fpm -m | grep -oiE '^imagick$' \
+	&& php -m | grep -oiE '^imap$' \
+	&& php-fpm -m | grep -oiE '^imap$' \
+	&& php -m | grep -oiE '^intl$' \
+	&& php-fpm -m | grep -oiE '^intl$' \
+	&& php -m | grep -oiE '^json$' \
+	&& php-fpm -m | grep -oiE '^json$' \
+	&& php -m | grep -oiE '^ldap$' \
+	&& php-fpm -m | grep -oiE '^ldap$' \
+	&& php -m | grep -oiE '^libxml$' \
+	&& php-fpm -m | grep -oiE '^libxml$' \
+	&& php -m | grep -oiE '^mbstring$' \
+	&& php-fpm -m | grep -oiE '^mbstring$' \
+	&& php -m | grep -oiE '^msgpack$' \
+	&& php-fpm -m | grep -oiE '^msgpack$' \
+	&& php -m | grep -oiE '^memcache$' \
+	&& php-fpm -m | grep -oiE '^memcache$' \
+	&& php -m | grep -oiE '^memcached$' \
+	&& php-fpm -m | grep -oiE '^memcached$' \
+	&& php -m | grep -oiE '^mongodb$' \
+	&& php-fpm -m | grep -oiE '^mongodb$' \
+	&& php -m | grep -oiE '^mysqli$' \
+	&& php-fpm -m | grep -oiE '^mysqli$' \
+	&& php -m | grep -oiE '^mysqlnd$' \
+	&& php-fpm -m | grep -oiE '^mysqlnd$' \
+	&& php -m | grep -oiE '^oauth$' \
+	&& php-fpm -m | grep -oiE '^oauth$' \
+	&& php -m | grep -oiE '^oci8$' \
+	&& php-fpm -m | grep -oiE '^oci8$' \
+	&& php -m | grep -oiE '^Zend Opcache$' \
+	&& php-fpm -m | grep -oiE '^Zend Opcache$' \
+	&& php -m | grep -oiE '^openssl$' \
+	&& php-fpm -m | grep -oiE '^openssl$' \
+	&& php -m | grep -oiE '^pcntl$' \
+	&& php-fpm -m | grep -oiE '^pcntl$' \
+	&& php -m | grep -oiE '^pcre$' \
+	&& php-fpm -m | grep -oiE '^pcre$' \
+	&& php -m | grep -oiE '^pdo$' \
+	&& php-fpm -m | grep -oiE '^pdo$' \
+	&& php -m | grep -oiE '^pdo_dblib$' \
+	&& php-fpm -m | grep -oiE '^pdo_dblib$' \
+	&& php -m | grep -oiE '^pdo_firebird$' \
+	&& php-fpm -m | grep -oiE '^pdo_firebird$' \
+	&& php -m | grep -oiE '^pdo_mysql$' \
+	&& php-fpm -m | grep -oiE '^pdo_mysql$' \
+	&& php -m | grep -oiE '^pdo_oci$' \
+	&& php-fpm -m | grep -oiE '^pdo_oci$' \
+	&& php -m | grep -oiE '^pdo_pgsql$' \
+	&& php-fpm -m | grep -oiE '^pdo_pgsql$' \
+	&& php -m | grep -oiE '^pdo_sqlite$' \
+	&& php-fpm -m | grep -oiE '^pdo_sqlite$' \
+	&& php -m | grep -oiE '^pdo_sqlsrv$' \
+	&& php-fpm -m | grep -oiE '^pdo_sqlsrv$' \
+	&& php -m | grep -oiE '^pgsql$' \
+	&& php-fpm -m | grep -oiE '^pgsql$' \
+	&& php -m | grep -oiE '^psr$' \
+	&& php-fpm -m | grep -oiE '^psr$' \
+	&& php -m | grep -oiE '^phar$' \
+	&& php-fpm -m | grep -oiE '^phar$' \
+	&& php -m | grep -oiE '^posix$' \
+	&& php-fpm -m | grep -oiE '^posix$' \
+	&& php -m | grep -oiE '^pspell$' \
+	&& php-fpm -m | grep -oiE '^pspell$' \
+	&& php -m | grep -oiE '^readline$' \
+	&& php -m | grep -oiE '^redis$' \
+	&& php-fpm -m | grep -oiE '^redis$' \
+	&& php -m | grep -oiE '^reflection$' \
+	&& php-fpm -m | grep -oiE '^reflection$' \
+	&& php -m | grep -oiE '^rdkafka$' \
+	&& php-fpm -m | grep -oiE '^rdkafka$' \
+	&& php -m | grep -oiE '^session$' \
+	&& php-fpm -m | grep -oiE '^session$' \
+	&& php -m | grep -oiE '^shmop$' \
+	&& php-fpm -m | grep -oiE '^shmop$' \
+	&& php -m | grep -oiE '^simplexml$' \
+	&& php-fpm -m | grep -oiE '^simplexml$' \
+	&& php -m | grep -oiE '^snmp$' \
+	&& php-fpm -m | grep -oiE '^snmp$' \
+	&& php -m | grep -oiE '^soap$' \
+	&& php-fpm -m | grep -oiE '^soap$' \
+	&& php -m | grep -oiE '^sockets$' \
+	&& php-fpm -m | grep -oiE '^sockets$' \
+	&& php -m | grep -oiE '^sodium$' \
+	&& php-fpm -m | grep -oiE '^sodium$' \
+	&& php -m | grep -oiE '^solr$' \
+	&& php-fpm -m | grep -oiE '^solr$' \
+	&& php -m | grep -oiE '^spl$' \
+	&& php-fpm -m | grep -oiE '^spl$' \
+	&& php -m | grep -oiE '^sqlsrv$' \
+	&& php-fpm -m | grep -oiE '^sqlsrv$' \
+	&& php -m | grep -oiE '^sysvmsg$' \
+	&& php-fpm -m | grep -oiE '^sysvmsg$' \
+	&& php -m | grep -oiE '^sysvsem$' \
+	&& php-fpm -m | grep -oiE '^sysvsem$' \
+	&& php -m | grep -oiE '^sysvshm$' \
+	&& php-fpm -m | grep -oiE '^sysvshm$' \
+	&& php -m | grep -oiE '^tidy$' \
+	&& php-fpm -m | grep -oiE '^tidy$' \
+	&& php -m | grep -oiE '^tokenizer$' \
+	&& php-fpm -m | grep -oiE '^tokenizer$' \
+	&& php -m | grep -oiE '^uploadprogress$' \
+	&& php-fpm -m | grep -oiE '^uploadprogress$' \
+	&& php -m | grep -oiE '^uuid$' \
+	&& php-fpm -m | grep -oiE '^uuid$' \
+	&& php -m | grep -oiE '^vips$' \
+	&& php-fpm -m | grep -oiE '^vips$' \
+	&& php -m | grep -oiE '^xdebug$' \
+	&& php-fpm -m | grep -oiE '^xdebug$' \
+	&& php -m | grep -oiE '^xml$' \
+	&& php-fpm -m | grep -oiE '^xml$' \
+	&& php -m | grep -oiE '^xmlreader$' \
+	&& php-fpm -m | grep -oiE '^xmlreader$' \
+	&& php -m | grep -oiE '^xmlwriter$' \
+	&& php-fpm -m | grep -oiE '^xmlwriter$' \
+	&& php -m | grep -oiE '^xsl$' \
+	&& php-fpm -m | grep -oiE '^xsl$' \
+	&& php -m | grep -oiE '^xlswriter$' \
+	&& php-fpm -m | grep -oiE '^xlswriter$' \
+	&& php -m | grep -oiE '^yaml$' \
+	&& php-fpm -m | grep -oiE '^yaml$' \
+	&& php -m | grep -oiE '^zip$' \
+	&& php-fpm -m | grep -oiE '^zip$' \
+	&& php -m | grep -oiE '^swoole$' \
+	&& php-fpm -m | grep -oiE '^swoole$' \
+	&& true \
+
+
+# Deactive PSR and Phalcon:
+# https://github.com/devilbox/docker-php-fpm/issues/201
+RUN set -eux \
+	&& rm -f /usr/local/etc/php/conf.d/docker-php-ext-phalcon.ini || true \
+	&& rm -f /usr/local/etc/php/conf.d/docker-php-ext-psr.ini || true \
+
+
+###
+### Ports
+###
+EXPOSE 9000
+
+
+###
+### Entrypoint
+###
+CMD ["/usr/local/sbin/php-fpm"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
