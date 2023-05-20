@@ -474,7 +474,6 @@ RUN set -eux \
 
 # Auto-generated via Ansible: edit build/ansible/DOCKERFILES/Dockerfile-mods.j2 instead.
 FROM devilbox/php-fpm:8.1-base as final
-MAINTAINER "cytopia" <cytopia@everythingcli.org>
 
 ###
 ### Labels
